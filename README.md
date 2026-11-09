@@ -16,7 +16,7 @@ La suddivisione delle fasi distintive in classi separate ha favorito la creazion
 Ha il compito di creare l'albero sintattico e di fornire una sua rappresentazione in formato XML.
 
 #### 2. MyScopingVisitor
-Si occupa gestire lo scoping del linguaggio, grazie allo scoping vistor è stato possibile gestire l'uso prima della dichiarazione sia di una variabile che di una funzione.
+Si occupa di gestire lo scoping del linguaggio, grazie allo scoping visitor è stato possibile gestire l'uso prima della dichiarazione sia di una variabile che di una funzione.
 I costrutti che permettono la creazione di un nuovo scope in NewLang sono:
   - while;
   - for;
@@ -26,7 +26,7 @@ I costrutti che permettono la creazione di un nuovo scope in NewLang sono:
   - intero programma;
   - tutti i costrutti che hanno al loro interno un body delegano a quest'ultimo la creazione e la gestione dello scope.
   
-  Inoltre viene anche data la possibilità di avere in scope innestati dichiarazioni di variabili già esistenti in scope superiori (Most-cloesly-nested rule).
+  Inoltre viene anche data la possibilità di avere in scope innestati dichiarazioni di variabili già esistenti in scope superiori (Most-closely-nested rule).
 
 
 #### 3. MyTypeVisitor
