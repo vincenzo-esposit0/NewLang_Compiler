@@ -1,0 +1,10 @@
+|* Regression test: type inference with var (one type per variable) |
+
+start:
+def program(): void {
+    var i << 1, r << 2.2, s << "text", ok << true, c << 'z';
+    real sum;
+    sum << i + r;
+    (i, " ", r, " ", s, " ", ok, " ", c) -->!;
+    (sum) -->!;
+}

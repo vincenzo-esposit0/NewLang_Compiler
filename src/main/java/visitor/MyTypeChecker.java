@@ -8,7 +8,7 @@ public class MyTypeChecker {
         return switch (type) {
             case "INTEGER", "INTEGER_CONST", "ConstInteger" -> sym.INTEGER;
             case "REAL", "REAL_CONST", "ConstReal" -> sym.REAL;
-            case "TRUE", "FALSE", "BOOL", "BOOLEAN" -> sym.BOOL;
+            case "TRUE", "FALSE", "ConstTrue", "ConstFalse", "BOOL", "BOOLEAN" -> sym.BOOL;
             case "STRING", "STRING_CONST", "ConstString" -> sym.STRING;
             case "CHAR", "CHAR_CONST", "ConstChar" -> sym.CHAR;
             case "VOID" -> sym.VOID;

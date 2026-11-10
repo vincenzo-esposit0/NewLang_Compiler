@@ -35,7 +35,8 @@ char* concat(char* s1, char* i) {
 void sequence(int n,int* last){
 int i = 1;
 while(i < n + 1){
-	printf("%d\n",fibonacci(i));
+	printf("%d",fibonacci(i));
+	printf("\n");
 i = i + 1;
 }
 *last = fibonacci(n);
@@ -54,8 +55,10 @@ int last;
 	printf("How many terms?\n");
 	scanf("%d",&n);
 sequence(n,&last); 
-	printf("%s\n","Last term:");
-	printf("%d\n",last);
+	printf("%s","Last term:");
+	printf("\n");
+	printf("%d",last);
+	printf("\n");
 }
 int main(int argc, char** argv){ 
 program();

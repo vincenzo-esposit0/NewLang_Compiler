@@ -433,7 +433,7 @@ public class MyTypeVisitor implements MyVisitor {
 
     private int getTypeCheckerResult(String operation, int type1, int type2) {
         return switch (operation) {
-            case "PLUS", "MINUS", "TIMES", "DIV", "POW", "AND", "OR", "STR_CONCAT", "EQUALS", "NE", "LT", "LE", "GT", "GR" ->
+            case "PLUS", "MINUS", "TIMES", "DIV", "POW", "AND", "OR", "STR_CONCAT", "EQUALS", "NE", "LT", "LE", "GT", "GE" ->
                     MyTypeChecker.binaryOperations(operation, type1, type2);
             default ->
                     sym.error;

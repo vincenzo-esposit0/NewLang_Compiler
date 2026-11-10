@@ -38,9 +38,11 @@ int a;
 int i;
 	int x;
 	for(x = 4; x >= 1;x--){
-			printf("%s\n","");
+			printf("%s","");
+	printf("\n");
 	}
-	printf("%s\n",messaggio);
+	printf("%s",messaggio);
+	printf("\n");
 }
 float sommac(int a,int d,float b,char** size){
 float result;
@@ -66,13 +68,17 @@ int c = 2;
 a = 1;
 b = 2.2;
 x = 3;
-	printf("%d\n",c);
+	printf("%d",c);
+	printf("\n");
 risultato = sommac(a,x,b,&taglia);
 stampa("la somma  incrementata  è "); 
-	printf("%s\n",taglia);
+	printf("%s",taglia);
+	printf("\n");
 stampa(" ed è pari a "); 
-	printf("%f\n",risultato);
-	printf("%s\n","vuoi continuare? (1/si 0/no)");
+	printf("%f",risultato);
+	printf("\n");
+	printf("%s","vuoi continuare? (1/si 0/no)");
+	printf("\n");
 	scanf("%d",&ans);
 while(ans == 1){
 	printf("inserisci un intero:\n");
@@ -81,14 +87,17 @@ while(ans == 1){
 	scanf("%f",&b);
 risultato = sommac(a,x,b,&taglia);
 stampa("la somma  incrementata  è "); 
-	printf("%s\n",taglia);
+	printf("%s",taglia);
+	printf("\n");
 stampa(" ed è pari a "); 
-	printf("%f\n",risultato);
+	printf("%f",risultato);
+	printf("\n");
 	printf("vuoi continuare? (1/si 0/no):\n");
 	scanf("%d",&ans);
 }
-	printf("%s\n","");
-	printf("%s\n","ciao");
+	printf("%s","");
+	printf("\n");
+	printf("%s","ciao");
 }
 int main(int argc, char** argv){ 
 esercizio();

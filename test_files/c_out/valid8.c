@@ -46,8 +46,10 @@ int c;
 int fibRes;
 int comando = -1;
 while(comando != 0){
-	printf("%s\n","1) Visualizza Menù");
-	printf("%s\n","0) Termina");
+	printf("%s","1) Visualizza Menù");
+	printf("\n");
+	printf("%s","0) Termina");
+	printf("\n");
 	printf("Inserisci comando:\n");
 	scanf("%d",&comando);
 if(comando == 1){
@@ -89,16 +91,18 @@ else{
 }
 }
 if(op != 7){
-		printf("%s\n","Il risultato dell'operazione scelta è :");
-	printf("%f\n",risultato);
+		printf("%s","Il risultato dell'operazione scelta è :");
+	printf("%f",risultato);
+	printf("\n");
 }
 else{
-		printf("%s\n","Il risultato dell'operazione scelta è :");
-	printf("%d\n",fibRes);
+		printf("%s","Il risultato dell'operazione scelta è :");
+	printf("%d",fibRes);
+	printf("\n");
 }
 }
 }
-	printf("%s\n","Ciao");
+	printf("%s","Ciao");
 }
 int succ_fibonacci(int i){
 if(i < 0){
@@ -133,13 +137,20 @@ return a + b;
 }
 int menu(){
 int op;
-	printf("%s\n","--------Menu--------");
-	printf("%s\n","2) Addizione");
-	printf("%s\n","3) Sottrazione");
-	printf("%s\n","4) Moltiplicazione");
-	printf("%s\n","5) Divisione");
-	printf("%s\n","6) Potenza");
-	printf("%s\n","7) Fibonacci");
+	printf("%s","--------Menu--------");
+	printf("\n");
+	printf("%s","2) Addizione");
+	printf("\n");
+	printf("%s","3) Sottrazione");
+	printf("\n");
+	printf("%s","4) Moltiplicazione");
+	printf("\n");
+	printf("%s","5) Divisione");
+	printf("\n");
+	printf("%s","6) Potenza");
+	printf("\n");
+	printf("%s","7) Fibonacci");
+	printf("\n");
 	printf("Inserisci operazione:\n");
 	scanf("%d",&op);
 while(op < 2 || op > 7){

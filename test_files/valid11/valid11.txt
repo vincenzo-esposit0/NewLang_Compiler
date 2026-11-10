@@ -1,0 +1,19 @@
+|* Regression test: the >= operator (integers, reals and mixed) |
+
+def classify(integer n): string {
+    string label;
+    label << "small";
+    if n >= 10 then {
+        label << "large";
+    }
+    return label;
+}
+
+start:
+def program(): void {
+    integer a << 10, b << 9;
+    real x << 2.5;
+    (classify(a), " ", classify(b)) -->!;
+    (a >= b, " ", b >= a, " ", a >= a) -->!;
+    (x >= 2.5, " ", x >= a) -->!;
+}

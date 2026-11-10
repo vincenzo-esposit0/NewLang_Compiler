@@ -81,8 +81,10 @@ float a;
 float b;
 int comando = -1;
 while(comando != 0){
-	printf("%s\n","1) Visualizza Menù");
-	printf("%s\n","0) Termina");
+	printf("%s","1) Visualizza Menù");
+	printf("\n");
+	printf("%s","0) Termina");
+	printf("\n");
 	printf("Inserisci comando:\n");
 	scanf("%d",&comando);
 if(comando == 1){
@@ -123,10 +125,11 @@ else{
 }
 }
 }
-	printf("%s\n",concat("Il risultato dell'operazione scelta è :",doubleToString(risultato)));
+	printf("%s",concat("Il risultato dell'operazione scelta è :",doubleToString(risultato)));
+	printf("\n");
 }
 }
-	printf("%s\n","Ciao");
+	printf("%s","Ciao");
 }
 int main(int argc, char** argv){ 
 esempio();
@@ -134,13 +137,20 @@ return (EXIT_SUCCESS);
 }
 int menu(){
 int op;
-	printf("%s\n","--------Menu--------");
-	printf("%s\n","2) Addizione");
-	printf("%s\n","3) Sottrazione");
-	printf("%s\n","4) Moltiplicazione");
-	printf("%s\n","5) Divisione");
-	printf("%s\n","6) Potenza");
-	printf("%s\n","7) Fibonacci");
+	printf("%s","--------Menu--------");
+	printf("\n");
+	printf("%s","2) Addizione");
+	printf("\n");
+	printf("%s","3) Sottrazione");
+	printf("\n");
+	printf("%s","4) Moltiplicazione");
+	printf("\n");
+	printf("%s","5) Divisione");
+	printf("\n");
+	printf("%s","6) Potenza");
+	printf("\n");
+	printf("%s","7) Fibonacci");
+	printf("\n");
 	printf("Inserisci operazione:\n");
 	scanf("%d",&op);
 while(op < 2 || op > 7){

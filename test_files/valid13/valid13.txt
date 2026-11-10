@@ -1,0 +1,15 @@
+|* Regression test: --> stays on the line, -->! ends it, booleans print as true/false |
+
+start:
+def program(): void {
+    integer n;
+    boolean flag << false;
+    ("a") -->;
+    ("b", "c") -->;
+    ("d") -->!;
+    (flag, " ", true) -->!;
+    n <-- "number:";
+    ("n=", n) -->;
+    ("") -->!;
+    ("end") -->;
+}

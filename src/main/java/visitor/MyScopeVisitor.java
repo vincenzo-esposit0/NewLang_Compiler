@@ -66,21 +66,27 @@ public class MyScopeVisitor implements MyVisitor{
         ArrayList<IdInitNode> idInitList = node.isVar() ? node.getIdInitObblList() : node.getIdInitList();
 
         if (idInitList != null) {
-            //Se la variabile è VAR assegno il tipo ottenuto dal ModeExpr, altrimenti prendo il tipo del nodo passato
-            int typeCheck = node.isVar() ? MyTypeChecker.getInferenceType(idInitList.get(0).getConstant().getModeExpr()) :
-                    MyTypeChecker.getInferenceType(node.getType());
+            Integer declType = null;
 
             for (IdInitNode idElement : idInitList) {
                 String nomeID = idElement.getId().getNomeId();
+
+                //Se la variabile è VAR il tipo si inferisce dalla costante di QUESTO elemento
+                //(es. var a << 1, b << 2.2: a è integer, b è real), altrimenti si usa il tipo dichiarato
+                int typeCheck = node.isVar() ? MyTypeChecker.getInferenceType(idElement.getConstant().getModeExpr()) :
+                        MyTypeChecker.getInferenceType(node.getType());
 
                 if (stackScope.peek().containsKey(nomeID)) {
                     throw new AlreadyDeclaredVariableException("L'identificativo è gia presente all'interno dello scope: " + nomeID);
                 }
 
                 stackScope.peek().put(nomeID, new SymbolRecord(nomeID, "var", typeCheck));
+                //Il traduttore C legge il tipo dal nodo dell'identificativo
+                idElement.getId().setAstType(typeCheck);
+                if (declType == null) declType = typeCheck;
             }
 
-            node.setAstType(typeCheck);
+            node.setAstType(declType);
         }
     }
 

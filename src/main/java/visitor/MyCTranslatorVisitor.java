@@ -502,20 +502,23 @@ public class MyCTranslatorVisitor implements MyVisitor {
 
         Collections.reverse(exprNodeList);
 
+        //Ogni espressione viene stampata senza a capo: (a, b) --> scrive "ab"
         for(ExprNode exprElement: exprNodeList){
-            if(typeWrite.equals("WRITE")){
-                sb.append("\tprintf(")
-                        .append(formatOut(exprElement.getAstType(), "printf"))
-                        .append(",")
-                        .append(exprElement.accept(this))
-                        .append(");\n");
-            } else if(typeWrite.equals("WRITELN")){
-                sb.append("\tprintf(")
-                        .append(formatOut(exprElement.getAstType(), "printf"))
-                        .append(",")
-                        .append(exprElement.accept(this))
-                        .append(");\n");
+            String value = exprElement.accept(this);
+            //I booleani sono interi in C: si stampano come "true"/"false"
+            if(exprElement.getAstType() != null && exprElement.getAstType() == sym.BOOL){
+                value = "boolToString(" + value + ")";
             }
+            sb.append("\tprintf(")
+                    .append(formatOut(exprElement.getAstType(), "inline"))
+                    .append(",")
+                    .append(value)
+                    .append(");\n");
+        }
+
+        //-->! (WRITELN) va a capo una sola volta dopo tutte le espressioni; --> (WRITE) no
+        if(typeWrite.equals("WRITELN")){
+            sb.append("\tprintf(\"\\n\");\n");
         }
 
         codeGeneratorC = sb.toString();
@@ -581,6 +584,9 @@ public class MyCTranslatorVisitor implements MyVisitor {
             sb.append("\"").append(node.getValue()).append("\"");
         } else if (node.getModeExpr().equals("ConstChar")){
             sb.append("'").append(node.getValue()).append("'");
+        } else if (MyTypeChecker.getInferenceType(node.getModeExpr()) == sym.BOOL) {
+            //Il C standard non ha true/false senza stdbool.h: i booleani sono interi (1/0)
+            sb.append(node.getValue().equalsIgnoreCase("true") ? "1" : "0");
         } else {
             sb.append(node.getValue());
         }
@@ -797,7 +803,7 @@ public class MyCTranslatorVisitor implements MyVisitor {
             case sym.REAL -> sb.append("0.0");
             case sym.STRING -> sb.append("\"\"");
             case sym.CHAR -> sb.append("''");
-            case sym.BOOL -> sb.append("false");
+            case sym.BOOL -> sb.append("0");
 
             default -> throw new UnsupportedOperationException("Tipo non supportato: " + parDeclNode.getAstType());
         }

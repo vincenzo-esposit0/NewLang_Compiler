@@ -11,7 +11,7 @@ Inserisci comando:
 Inserisci operazione:
 Inserisci il primo numero reale:
 Inserisci il secondo numero reale:
-Il risultato dell'operazione scelta è : 11.000000
+Il risultato dell'operazione scelta è :11.000000
 1) Visualizza Menù
 0) Termina
 Inserisci comando:
@@ -24,7 +24,7 @@ Inserisci comando:
 7) Fibonacci
 Inserisci operazione:
 Inserisci un intero:
-Il risultato dell'operazione scelta è : 2
+Il risultato dell'operazione scelta è :2
 1) Visualizza Menù
 0) Termina
 Inserisci comando:
@@ -38,7 +38,7 @@ Inserisci comando:
 Inserisci operazione:
 Inserisci il primo numero reale:
 Inserisci il secondo numero reale:
-Il risultato dell'operazione scelta è : 8.000000
+Il risultato dell'operazione scelta è :8.000000
 1) Visualizza Menù
 0) Termina
 Inserisci comando:

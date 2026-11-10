@@ -22,7 +22,7 @@
 | **Team** | Vincenzo Esposito and [Davide Prezioso](https://github.com/prezioso3) |
 | **My role** | I led the **semantic analysis and code generation**: scoping and symbol tables, type checking and inference, the C translator and the semantic error model. I also wrote the **test suite** |
 | **Stack** | Java 17 · JFlex · Java CUP · Maven · GCC |
-| **Testing** | 19 test programs: 10 valid and 9 invalid. Every valid program compiles to C and runs; every invalid one is rejected with the expected error |
+| **Testing** | 22 test programs, all passing: 13 valid programs whose output matches the expected output, and 9 invalid ones rejected with the expected error |
 
 ## Who did what
 
@@ -123,7 +123,8 @@ void program();
 void sequence(int n, int* last) {
     int i = 1;
     while (i < n + 1) {
-        printf("%d\n", fibonacci(i));
+        printf("%d", fibonacci(i));
+        printf("\n");
         i = i + 1;
     }
     *last = fibonacci(n);
@@ -144,8 +145,10 @@ void program() {
     printf("How many terms?\n");
     scanf("%d", &n);
     sequence(n, &last);
-    printf("%s\n", "Last term:");
-    printf("%d\n", last);
+    printf("%s", "Last term:");
+    printf("\n");
+    printf("%d", last);
+    printf("\n");
 }
 
 int main(int argc, char** argv) {
@@ -177,7 +180,7 @@ Notice how the `out` parameter `last` becomes `int*` in C and the call site pass
 
 | Feature | Syntax |
 |---|---|
-| Types | `integer` · `real` · `string` · `char` · `bool` |
+| Types | `integer` · `real` · `string` · `char` · `boolean` |
 | Declarations | `integer a << 1, b;` · type inference with `var x << 10;` |
 | Functions | `def f(integer a, b \| out real r): real { … }` (parameter groups separated by `\|`) |
 | Entry point | `start:` before the main function |
@@ -201,17 +204,23 @@ The compiler writes the C file to `test_files/c_out/` and the executable to `tes
 
 ### Test suite
 
-- `test_files/valid*`: 10 programs that must compile, each with its input and expected output.
+- `test_files/valid*`: 13 programs that must compile and produce exactly their expected output, given their input. `valid11` to `valid13` are regression tests for the 2026 fixes.
 - `test_files/invalid_*`: 9 programs that must be rejected. They cover a missing function, a missing return, an undeclared variable, a redeclaration, too many parameters, a wrong parameter count, a wrong return type and misuse of an `out` parameter.
 
-## Known limitations
+## Maintenance log (2026)
 
-These came up in a review of the project in 2026 and are documented rather than hidden:
+A review of the project in 2026 found and fixed these bugs. Each one now has a regression test:
 
-- The `>=` comparison is rejected by the type checker; `>`, `<` and `<=` work.
-- `var x << 2.2` is inferred as `integer` instead of `real`, so the decimal part is lost.
-- `-->` (write without a newline) currently emits a newline, like `-->!`. This is the main reason why some valid tests produce correct values with different line breaks from the expected output.
-- The generated C is correct but not pretty-printed.
+| Bug | Cause | Fix | Test |
+|---|---|---|---|
+| `>=` rejected by the type checker | A typo in `MyTypeVisitor`: the operator list contained `"GR"` instead of `"GE"` | Corrected the operator name | `valid11` |
+| `var a << 1, b << 2.2` typed `b` as `integer` (every `var` became `int` in C, even strings) | The scope visitor inferred one type from the first constant only, and never stored it on the identifiers the C translator reads | Infer the type of each variable from its own constant and store it on the identifier | `valid12` |
+| `true`/`false` produced invalid C (`TRUE`, `true` are undefined without `stdbool.h`) | Boolean constants were emitted verbatim, and their parser labels were unknown to type inference | Emit `1`/`0` and map `ConstTrue`/`ConstFalse` to `boolean` | `valid12`, `valid13` |
+| `-->` always ended the line, and booleans printed as `(null)` | Both write forms emitted `printf("...\n")` per expression; booleans were passed to `%s` | `-->` prints its expressions on the same line, `-->!` adds a single newline at the end, booleans print through `boolToString` | `valid13` |
+
+Seven expected-output files were also corrected. Four had been copied by hand from a terminal session (they included typed input and joined lines), one belonged to a different program, one encoded the old write bug, and one expected a space between written items, which contradicted the other tests. The computed values in these files were unaffected.
+
+The generated C is correct but not pretty-printed.
 
 ---
 
