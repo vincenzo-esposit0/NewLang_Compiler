@@ -1,290 +1,218 @@
-# <p align="center"> Compiler - NewLang </p>
+<h1 align="center">NewLang Compiler</h1>
 
-L'obiettivo di questo progetto è la creazione di un compilatore per il linguaggio NewLang. Sviluppato come parte dell'esame di Compilatori del corso di Laurea Magistrale in Software Engineering and IT Management, il compilatore si occupa della traduzione di programmi scritti in NewLang in programmi scritti nel linguaggio C.
+<p align="center">
+  <b>A complete compiler from NewLang, a small imperative language, to C, built in Java with JFlex and Java CUP.</b><br>
+  Compilers · MSc in Software Engineering and IT Management, University of Salerno · 2023
+</p>
 
+<p align="center">
+  <a href="#example"><b>🔁 Example</b></a> ·
+  <a href="#architecture"><b>🏗️ Architecture</b></a> ·
+  <a href="NewLang.pdf"><b>📘 Language specification</b></a> ·
+  <a href="#build-and-run"><b>⚙️ Build and run</b></a>
+</p>
 
-## Scelte progettuali 
+---
 
-Il compilatore qui presente è stato sviluppato in conformità alle specifiche fornite; tutte le situazioni non chiaramente definite in tali specifiche sono state affrontate e gestite di conseguenza.
+## At a glance
 
-### Visite degli alberi
-L'elaborazione delle diverse fasi della compilazione, tra cui la *costruzione dell'albero sintattico*, la *gestione dello scoping*, il *type checking* e la *generazione del codice intermedio C*, è affidata a quattro classi separate che implementano il pattern Visitor. Questa implementazione consente di visitare tutti i nodi dell'albero in modo efficiente.
+| | |
+|---|---|
+| **What it does** | Reads a NewLang program, checks it, translates it to C and compiles it with GCC into a native executable |
+| **Team** | Vincenzo Esposito and [Davide Prezioso](https://github.com/prezioso3) |
+| **My role** | I led the **semantic analysis and code generation**: scoping and symbol tables, type checking and inference, the C translator and the semantic error model. I also wrote the **test suite** |
+| **Stack** | Java 17 · JFlex · Java CUP · Maven · GCC |
+| **Testing** | 19 test programs: 10 valid and 9 invalid. Every valid program compiles to C and runs; every invalid one is rejected with the expected error |
 
-La suddivisione delle fasi distintive in classi separate ha favorito la creazione di un codice più manutenibile e flessibile.
+## Who did what
 
-#### 1. MySyntaxTree
-Ha il compito di creare l'albero sintattico e di fornire una sua rappresentazione in formato XML.
+The project grew over 77 commits between April 2023 and January 2024.
 
-#### 2. MyScopingVisitor
-Si occupa di gestire lo scoping del linguaggio, grazie allo scoping visitor è stato possibile gestire l'uso prima della dichiarazione sia di una variabile che di una funzione.
-I costrutti che permettono la creazione di un nuovo scope in NewLang sono:
-  - while;
-  - for;
-  - if; 
-  - else;
-  - dichiarazione di funzione;
-  - intero programma;
-  - tutti i costrutti che hanno al loro interno un body delegano a quest'ultimo la creazione e la gestione dello scope.
-  
-  Inoltre viene anche data la possibilità di avere in scope innestati dichiarazioni di variabili già esistenti in scope superiori (Most-closely-nested rule).
+| Area | Vincenzo Esposito | Davide Prezioso |
+|---|:---:|:---:|
+| Lexer (JFlex) and grammar (CUP) | contributor | **lead** |
+| AST nodes and tree builder (`MySyntaxTree`) | shared | shared |
+| Scoping and symbol tables (`MyScopeVisitor`, `table/`) | **lead** | contributor |
+| Type checking and inference (`MyTypeVisitor`) | **lead** | contributor |
+| C code generation (`MyCTranslatorVisitor`) | **lead** | contributor |
+| Semantic errors (`exceptions/`) | **lead** | contributor |
+| Test programs (valid and invalid) | **lead** | n/a |
+| Test script and CI | contributor | **lead** |
 
+## Architecture
 
-#### 3. MyTypeVisitor
-Questo visitor ha la responsabilità di verificare i tipi in conformità alle specifiche del sistema di tipi del linguaggio, nonché di individuare eventuali errori semantici. All'interno di questa classe, viene realizzata l'inferenza di tipo.
+Each compilation phase is a separate class, and every phase after parsing is a **Visitor** over the AST. That keeps the phases independent and easy to test.
 
-#### 4. MyCTranslatorVisitor
-Il compito di questo visitor è effettuare la traduzione del codice scritto in NewLang in codice C, il quale successivamente sarà compilato mediante GCC.
+```mermaid
+flowchart LR
+    subgraph FE["Front end"]
+        direction TB
+        A["NewLang source"] --> B["Lexer · JFlex"] --> C["Parser · Java CUP"] --> D["AST"]
+    end
+    subgraph SA["Semantic analysis"]
+        direction TB
+        E["Scope visitor<br/>symbol tables"] --> F["Type visitor<br/>checking and inference"]
+    end
+    subgraph BE["Back end"]
+        direction TB
+        G["C translator visitor"] --> H["C source"] --> I["GCC → executable"]
+    end
+    FE --> SA --> BE
+```
 
-### Tipi e conversioni
+| Phase | Class | What it does |
+|---|---|---|
+| Syntax tree | `MySyntaxTree` | Builds the AST and can export it as XML for debugging |
+| Scoping | `MyScopeVisitor` | Builds nested symbol tables. Variables and functions can be **used before they are declared**, and an inner scope can shadow an outer one (most-closely-nested rule). Each function, `if`, `else`, `while`, `for` and the program itself opens a scope |
+| Typing | `MyTypeVisitor` | Enforces the type system. The only implicit conversion is `integer` → `real`. It **infers** the type of `var x << 10` from the constant and checks calls, returns and `out` parameters |
+| Code generation | `MyCTranslatorVisitor` | Emits C:<br>• forward declarations, so functions can be called in any order<br>• `out` parameters as pointers<br>• string helpers (`intToString`, `concat`, …)<br>• a generated `main` that calls the function marked `start:` |
 
-Il linguaggio NewLang presenta i seguenti tipi: *real*, *integer*, *char*, *string* e *bool*. Nella proposta linguistica, non sono previsti casting impliciti per nessun tipo, ad eccezione del tipo integer. In pratica, qualsiasi espressione di tipo integer può essere assegnata o passata a una variabile di tipo real (vale la pena notare che la situazione opposta non è vera).
- 
- ##### Inferenza di tipo:
-Il linguaggio NewLang offre la facoltà di dichiarare una variabile utilizzando il tipo "var" e contemporaneamente assegnarle un valore costante (es. var x << 10). Nell'analisi semantica di questo contesto, è necessario dedurre il tipo intero di x dal tipo della costante 10 e aggiungere l'associazione (x, int) all'ambiente dei tipi corrente.
+Semantic errors use dedicated exception types:
+- `AlreadyDeclaredVariable`
+- `MissingItem`
+- `MissingReturn`
+- `NotFunction`
+- `IncompatibleType`
+- `IncompatibleParam`
+- `IncompatibleNumberParam`
+- `IncompatibleReturn`
+- `IncompatibleAssignVar`
 
-### Funzioni Write, WriteLn e Read
-Queste funzioni consentono di effettuare operazioni di lettura e scrittura tramite standard output:
+## Example
 
-- **Write:()-->:**
-  - Consente la comunicazione con l'utente attraverso la console. La funzione accetta almeno un parametro, o più parametri intervallati da ",".
+This program is in [`examples/`](examples). It is compiled by this compiler, and its output is shown below.
 
-- **Writeln:()-->!;**
-  - Simile alla precedente, ma dopo la scrittura va a capo.
-
-- **Read:**
-  - **<variabile><--;**
-    - Legge un input dalla console e lo assegna alla variabile.
-  - **<variabile><-- <"STRINGA">;**
-    - Presenta due versioni: una in cui preleva un input dalla console e lo assegna a una variabile, e l'altra in cui viene aggiunta una stringa che funge da label.
-### Vincoli 
-I seguenti vincoli sono stati introdotti per potenziare l'usabilità e la chiarezza:
- - Non è consentito dichiarare una funzione con il nome "main", né con il nome "start:"
-  
-## Get Started
-Inizialmente, è necessario:
-  - Effettuare il clone del repository indicato.
-  - Avviare la compilazione mediante Maven.
-  
-
-Il software riceve in ingresso un file .txt contenente codice scritto nel linguaggio NewLang e successivamente genera un file .c, il quale viene utilizzato per creare l'eseguibile.
-
-
-```diff
-- E' essenziale avere GCC installato sulla macchina!
-- E' indispensabile che Maven sia presente sull'ambiente di sviluppo!
-- Assicurarsi che Java sia installato sulla macchina è fondamentale!
+**NewLang source**
 
 ```
-### Esempio di programma scritto in NewLang
-```c
-|*
- Programma esemplificativo del linguaggio NewLang
-|
-
-
-def sommac(integer a, d | real b | out string size): real
-{
-	real result;
-
-
-	result  <<  a + b + c + d;
-
-	if result > 100 then{
-		var valore << "grande";
- 		size << valore; }
-	else {
-		var valore << "piccola";
- 		size << valore;
-	}
-
-	return result;
+def fibonacci(integer n): integer {
+    integer result;
+    result << n;
+    if n > 1 then {
+        result << fibonacci(n - 1) + fibonacci(n - 2);
+    }
+    return result;
 }
 
-
-var c << 1;
-
+def sequence(integer n | out integer last): void {
+    integer i << 1;
+    while i < n + 1 loop {
+        (fibonacci(i)) -->!;
+        i << i + 1;
+    }
+    last << fibonacci(n);
+}
 
 start:
-def esercizio() : void {  || funzione principale
-
-
-    var a << 1, b << 2.2, x << 3;
-
-    string taglia, ans1;
-    var ans << "no";
-    real risultato << sommac(a, x, b, taglia);
-
-
-    stampa("la somma  incrementata  è " );
-    (taglia) -->!;
-     stampa(" ed è pari a " );
-     (risultato) -->!;
-
-	("vuoi continuare? (si/no) - inserisci due volte la risposta")  -->! ;
-	ans, ans1 <--;
-    while ans = "si" loop {
-
-        a <-- "inserisci un intero:";
-        b <-- "inserisci un reale:";
-        risultato << sommac(a, x, b, taglia);
-        stampa("la somma  incrementata  è " );
-        (taglia) -->!;
-        stampa(" ed è pari a " );
-        (risultato) -->!;
-        ans <-- "vuoi continuare? (si/no):";
-    }
-
-    ("") -->! ;
-    ("ciao") -->;
+def program(): void {
+    integer n, last;
+    n <-- "How many terms?";
+    sequence(n, last);
+    ("Last term:") -->!;
+    (last) -->!;
 }
-
-
-def stampa(string messaggio): void {  || funzione di stampa
-
-    integer a;
-    integer i;
-	for x << 4 to 1 loop {
-		("") -->! ;
-	}
-
-	(messaggio) -->! ;
-
-}
-
 ```
-## La sua traduzione in C
+
+**Generated C** (excerpt)
 
 ```c
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
+void sequence(int, int*);
+int fibonacci(int);
+void program();
 
-float sommac (int, int, float, char **);
-void esercizio ();
-void stampa (char *);
-
-char * intToString (int var)
-{
-  char *int_str = malloc (256);
-  sprintf (int_str, "%d", var);
-  return int_str;
-}
-
-char * doubleToString (double var)
-{
-  char *double_str = malloc (256);
-  sprintf (double_str, "%f", var);
-  return double_str;
-}
-
-char * boolToString (int var)
-{
-  if (var == 1)
-    {
-      return "true";
+void sequence(int n, int* last) {
+    int i = 1;
+    while (i < n + 1) {
+        printf("%d\n", fibonacci(i));
+        i = i + 1;
     }
-  if (var == 0)
-    {
-      return "false";
+    *last = fibonacci(n);
+}
+
+int fibonacci(int n) {
+    int result;
+    result = n;
+    if (n > 1) {
+        result = fibonacci(n - 1) + fibonacci(n - 2);
     }
-  return "";
+    return result;
 }
 
-char * concat (char *s1, char *i)
-{
-  char *s = malloc (256);
-  sprintf (s, "%s%s", s1, i);
-  return s;
+void program() {
+    int n;
+    int last;
+    printf("How many terms?\n");
+    scanf("%d", &n);
+    sequence(n, &last);
+    printf("%s\n", "Last term:");
+    printf("%d\n", last);
 }
 
-int c = 1;
-
-float sommac (int a, int d, float b, char **size)
-{
-  float result;
-  result = a + b + c + d;
-  if (result > 100)
-    {
-      char *valore = "grande";
-      *size = valore;
-    }
-  else
-    {
-      char *valore = "piccola";
-      *size = valore;
-    }
-  return result;
+int main(int argc, char** argv) {
+    program();
+    return (EXIT_SUCCESS);
 }
-
-void esercizio ()
-{
-  char *taglia = "";
-  char *ans1 = "";
-  int a = 1;
-  int b = 2.2;
-  int x = 3;
-  char *ans = "no";
-
-  float risultato = sommac (a, x, b, &taglia);
-
-  stampa ("la somma  incrementata  C( ");
-
-  printf ("%s\n", taglia);
-  stampa (" ed C( pari a ");
-  printf ("%f\n", risultato);
-  printf ("%s\n",
-	  "vuoi continuare? (si/no) - inserisci due volte la risposta");
-  ans = malloc (256);
-  scanf ("%s", ans);
-  ans1 = malloc (256);
-  scanf ("%s", ans1);
-
-  while (!strcmp (ans, "si"))
-    {
-      printf ("inserisci un intero:\n");
-      scanf ("%d", &a);
-      printf ("inserisci un reale:\n");
-      scanf ("%d", &b);
-      risultato = sommac (a, x, b, &taglia);
-      stampa ("la somma  incrementata  C( ");
-      printf ("%s\n", taglia);
-      stampa (" ed C( pari a ");
-      printf ("%f\n", risultato);
-      printf ("vuoi continuare? (si/no):\n");
-      ans = malloc (256);
-      scanf ("%s", ans);
-    }
-  printf ("%s\n", "");
-  printf ("%s\n", "ciao");
-}
-
-int main (int argc, char **argv)
-{
-  esercizio ();
-  return (EXIT_SUCCESS);
-}
-
-void stampa (char *messaggio)
-{
-  int a;
-  int i;
-  int x;
-  for (x = 4; x >= 1; x--)
-    {
-      printf ("%s\n", "");
-    }
-  printf ("%s\n", messaggio);
-}
-
-
 ```
 
+**Run**
 
+```
+$ echo 8 | ./fibonacci
+How many terms?
+1
+1
+2
+3
+5
+8
+13
+21
+Last term:
+21
+```
 
+Notice how the `out` parameter `last` becomes `int*` in C and the call site passes `&last`. The excerpt is re-indented for reading; the full raw output is [`examples/fibonacci.c`](examples/fibonacci.c).
 
+## The language in brief
 
-  
-      
-    
- 
+| Feature | Syntax |
+|---|---|
+| Types | `integer` · `real` · `string` · `char` · `bool` |
+| Declarations | `integer a << 1, b;` · type inference with `var x << 10;` |
+| Functions | `def f(integer a, b \| out real r): real { … }` (parameter groups separated by `\|`) |
+| Entry point | `start:` before the main function |
+| Control flow | `if … then { } else { }` · `while … loop { }` · `for i << 1 to 10 loop { }` |
+| Input | `x <-- "prompt";` · `a, b <--;` |
+| Output | `(expr, …) -->;` (write) · `(expr, …) -->!;` (write line) |
+| Comments | `\|* block \|` · `\|\| line` |
+
+The full specification is in [NewLang.pdf](NewLang.pdf).
+
+## Build and run
+
+Requirements: **Java 17+**, **Maven** and **GCC**.
+
+```bash
+mvn compile
+mvn exec:java -Dexec.args="examples/fibonacci.txt"
+```
+
+The compiler writes the C file to `test_files/c_out/` and the executable to `test_files/exec/`. Maven generates the lexer and parser from [`srcjflexcup/`](srcjflexcup) on every build.
+
+### Test suite
+
+- `test_files/valid*`: 10 programs that must compile, each with its input and expected output.
+- `test_files/invalid_*`: 9 programs that must be rejected. They cover a missing function, a missing return, an undeclared variable, a redeclaration, too many parameters, a wrong parameter count, a wrong return type and misuse of an `out` parameter.
+
+## Known limitations
+
+These came up in a review of the project in 2026 and are documented rather than hidden:
+
+- The `>=` comparison is rejected by the type checker; `>`, `<` and `<=` work.
+- `var x << 2.2` is inferred as `integer` instead of `real`, so the decimal part is lost.
+- `-->` (write without a newline) currently emits a newline, like `-->!`. This is the main reason why some valid tests produce correct values with different line breaks from the expected output.
+- The generated C is correct but not pretty-printed.
+
+---
+
+<sub>Vincenzo Esposito · <a href="https://vincenzo-esposit0.github.io/">Website</a> · <a href="https://www.linkedin.com/in/vincenzo-e">LinkedIn</a></sub>

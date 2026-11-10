@@ -1,0 +1,28 @@
+|* Fibonacci in NewLang: recursion, out parameters, loops and I/O |
+
+def fibonacci(integer n): integer {
+    integer result;
+    result << n;
+    if n > 1 then {
+        result << fibonacci(n - 1) + fibonacci(n - 2);
+    }
+    return result;
+}
+
+def sequence(integer n | out integer last): void {
+    integer i << 1;
+    while i < n + 1 loop {
+        (fibonacci(i)) -->!;
+        i << i + 1;
+    }
+    last << fibonacci(n);
+}
+
+start:
+def program(): void {
+    integer n, last;
+    n <-- "How many terms?";
+    sequence(n, last);
+    ("Last term:") -->!;
+    (last) -->!;
+}
